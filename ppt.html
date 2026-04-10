@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Task Manager - Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg0: #020617;
+  --bg1: #0f172a;
+  --card: rgba(148, 163, 184, 0.08);
+  --card-border: rgba(56, 189, 248, 0.22);
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent2: #a78bfa;
+  --success: #34d399;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: linear-gradient(145deg, var(--bg0) 0%, var(--bg1) 55%, #0c1222 100%);
+  color: var(--text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.slide {
+  display: none;
+  min-height: 100vh;
+  max-height: 100vh;
+  padding: clamp(40px, 5vw, 72px) clamp(40px, 5vw, 96px) clamp(88px, 12vh, 120px);
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+.slide.active {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.slide-inner {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(28px, 4vh, 48px);
+}
+
+.slide--title-only .slide-inner {
+  justify-content: center;
+  text-align: center;
+  max-width: 920px;
+}
+
+h1 {
+  font-size: clamp(2.25rem, 4.2vw, 3.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  margin: 0;
+  background: linear-gradient(105deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lead {
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 52ch;
+}
+
+.slide--title-only .lead {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tech-line {
+  font-size: clamp(0.95rem, 1.35vw, 1.1rem);
+  color: rgba(148, 163, 184, 0.85);
+  margin: 0;
+}
+
+.tech-line span {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Two-column layout */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 4vw, 56px);
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .split { grid-template-columns: 1fr; }
+}
+
+ul.content-list {
+  font-size: clamp(1.05rem, 1.65vw, 1.25rem);
+  line-height: 1.65;
+  margin: 0;
+  padding-left: 1.35em;
+  color: #e2e8f0;
+}
+
+ul.content-list li {
+  margin-bottom: 0.65em;
+}
+
+ul.content-list li:last-child { margin-bottom: 0; }
+
+/* Feature grid — avoids one congested row */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(16px, 2vw, 22px);
+}
+
+@media (max-width: 640px) {
+  .feature-grid { grid-template-columns: 1fr; }
+}
+
+.feature-grid--six {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 960px) {
+  .feature-grid--six {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.feature-card {
+  padding: clamp(20px, 2.5vw, 28px) clamp(22px, 2.5vw, 28px);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.feature-card span.num {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(167, 139, 250, 0.2));
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Diagram panels */
+.diagram-panel {
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.45));
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: clamp(24px, 3vw, 36px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.diagram-panel svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Minimum height for tall diagrams; do not use on very wide horizontal SVGs */
+.diagram-panel--readable svg {
+  min-height: clamp(170px, 20vh, 260px);
+}
+
+/* Wide flow diagrams: cap height so the panel cannot exceed the viewport */
+.diagram-panel--horiz-fit svg {
+  min-height: 0 !important;
+  max-height: clamp(72px, 18vh, 160px);
+  width: 100%;
+}
+
+/* Redis + Mongo slide — PDF-aligned cards */
+.slide-inner--redis {
+  justify-content: flex-start;
+  gap: clamp(14px, 2.2vh, 22px);
+}
+
+.db-split-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, 2.5vw, 28px);
+  align-items: start;
+  width: 100%;
+}
+
+@media (max-width: 800px) {
+  .db-split-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.db-card {
+  padding: clamp(18px, 2.2vw, 24px) clamp(20px, 2.5vw, 26px);
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.35));
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+}
+
+.db-card--redis {
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.db-card--mongo {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.db-card h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1rem, 1.65vw, 1.2rem);
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.3;
+}
+
+.db-card--redis h2 {
+  color: #fecaca;
+}
+
+.db-card--mongo h2 {
+  color: #7dd3fc;
+}
+
+.db-card ul {
+  margin: 0;
+  padding-left: 1.25em;
+  font-size: clamp(0.92rem, 1.35vw, 1.05rem);
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+.db-card ul li {
+  margin-bottom: 0.5em;
+}
+
+.db-card ul li:last-child {
+  margin-bottom: 0;
+}
+
+.db-together {
+  margin: 0;
+  padding: clamp(14px, 2vw, 18px) clamp(18px, 2.5vw, 22px);
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  font-size: clamp(0.95rem, 1.4vw, 1.08rem);
+  line-height: 1.5;
+  color: #e2e8f0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.db-together strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* PDF-style numbered flow (e.g. system flow slide) */
+ol.flow-steps-list {
+  margin: 0;
+  padding-left: 1.35em;
+  max-width: 58ch;
+  font-size: clamp(0.98rem, 1.45vw, 1.12rem);
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+
+ol.flow-steps-list li {
+  margin-bottom: 0.55em;
+}
+
+ol.flow-steps-list li:last-child {
+  margin-bottom: 0;
+}
+
+.diagram-caption {
+  margin-top: 14px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.45;
+}
+
+/* Agent slides: list + visual strip */
+.agent-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+  gap: clamp(28px, 3.5vw, 48px);
+  align-items: center;
+}
+
+@media (max-width: 860px) {
+  .agent-layout { grid-template-columns: 1fr; }
+}
+
+.agent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.agent-badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+/* Chat mock */
+.chat-wrap {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.chat {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+.msg {
+  font-size: clamp(0.9rem, 1.25vw, 1rem);
+  padding: 12px 14px;
+  margin: 10px 0;
+  border-radius: 12px;
+  line-height: 1.45;
+}
+
+.user { background: linear-gradient(135deg, #22c55e, #16a34a); color: #022c22; text-align: right; font-weight: 500; }
+.bot { background: rgba(51, 65, 85, 0.85); color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.15); }
+
+/* Compact list + chips for Gemini / governance */
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  color: #bae6fd;
+}
+
+/* System flow: wrapped steps */
+.flow-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px 8px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.flow-step {
+  padding: 12px 18px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  font-size: clamp(0.9rem, 1.2vw, 1.02rem);
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.flow-chev {
+  color: var(--accent);
+  font-size: 1.25rem;
+  font-weight: 300;
+  opacity: 0.9;
+  user-select: none;
+}
+
+/* Nav */
+.nav {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+button {
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--accent);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+button:hover {
+  background: rgba(56, 189, 248, 0.15);
+}
+</style>
+</head>
+
+<body>
+
+<!-- 1 -->
+<div class="slide active slide--title-only">
+  <div class="slide-inner">
+    <h1>AI Task Manager on WhatsApp</h1>
+    <p class="lead">Conversational assistant for assigning, tracking, and reviewing tasks—where your team already works.</p>
+    <p class="lead" style="margin-top:0.35rem;">Built for managers and teams already using WhatsApp.</p>
+    <p class="tech-line">Powered by <span>Gemini</span> · <span>Appsavy</span> · <span>Redis</span> · <span>MongoDB</span></p>
+  </div>
+</div>
+
+<!-- 2 -->
+<div class="slide">
+  <div class="slide-inner">
+    <h1>Business need</h1>
+    <div class="split">
+      <ul class="content-list">
+        <li>Task communication lives in chat, but tracking is still manual.</li>
+        <li>Follow-ups, ownership, and status visibility are inconsistent.</li>
+        <li>Managers need quick performance visibility without new dashboards.</li>
+        <li><strong>Solution:</strong> convert WhatsApp messages into structured task actions.</li>
+      </ul>
+      <div class="diagram-panel diagram-panel--readable">
+        <svg viewBox="-8 -12 376 288" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet" style="overflow:visible">
+          <defs>
+            <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#38bdf8;stop-opacity:0.35"/>
+              <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:0.2"/>
+            </linearGradient>
+            <filter id="shadow" x="-35%" y="-35%" width="170%" height="170%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.35"/>
+            </filter>
+          </defs>
+          <rect x="95" y="20" width="170" height="64" rx="14" fill="url(#g1)" stroke="#38bdf8" stroke-opacity="0.55" filter="url(#shadow)"/>
+          <text x="180" y="50" text-anchor="middle" fill="#f1f5f9" font-size="15" font-weight="600" font-family="DM Sans, sans-serif">WhatsApp</text>
+          <text x="180" y="72" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="DM Sans, sans-serif">Natural language in</text>
+          <path d="M180 88 L180 104" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+          <polygon points="180,112 174,100 186,100" fill="#38bdf8"/>
+          <rect x="70" y="118" width="220" height="56" rx="14" fill="rgba(51,65,85,0.65)" stroke="rgba(167,139,250,0.45)" filter="url(#shadow)"/>
+          <text x="180" y="145" text-anchor="middle" fill="#f1f5f9" font-size="15" font-weight="600" font-family="DM Sans, sans-serif">AI processing</text>
+          <text x="180" y="163" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="DM Sans, sans-serif">Intent · entities · guardrails</text>
+          <path d="M180 176 L180 198" stroke="#a78bfa" stroke-width="2" stroke-linecap="round"/>
+          <polygon points="180,206 174,194 186,194" fill="#a78bfa"/>
+          <rect x="85" y="210" width="190" height="44" rx="12" fill="rgba(16,185,129,0.15)" stroke="rgba(52,211,153,0.5)"/>
+          <text x="180" y="237" text-anchor="middle" fill="#6ee7b7" font-size="14" font-weight="600" font-family="DM Sans, sans-serif">Structured tasks</text>
+        </svg>
+        <p class="diagram-caption">Single pipeline from message to actionable records</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 — PDF: What Features Are Provided -->
+<div class="slide">
+  <div class="slide-inner slide-inner--redis">
+    <h1>What features are provided</h1>
+    <p class="lead" style="max-width:62ch;">Assignment, status, pending view, performance, user management, and attachments—each available from chat.</p>
+    <div class="feature-grid feature-grid--six">
+      <div class="feature-card"><span class="num">1</span> <span><strong>Task assignment:</strong> assignee, deadline, description</span></div>
+      <div class="feature-card"><span class="num">2</span> <span><strong>Status update:</strong> complete / in-progress with context</span></div>
+      <div class="feature-card"><span class="num">3</span> <span><strong>Pending tasks:</strong> view your own pending work</span></div>
+      <div class="feature-card"><span class="num">4</span> <span><strong>Performance:</strong> employee/team summary or detailed report</span></div>
+      <div class="feature-card"><span class="num">5</span> <span><strong>User management:</strong> add users </span></div>
+      <div class="feature-card"><span class="num">6</span> <span><strong>Documents/images:</strong> attachments with task-related context</span></div>
+    </div>
+    <div class="diagram-panel diagram-panel--horiz-fit" style="max-width:100%;margin:0 auto;">
+      <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#38bdf8"/>
+          </marker>
+        </defs>
+        <line x1="48" y1="100" x2="148" y2="100" stroke="#38bdf8" stroke-width="3" marker-end="url(#arr)"/>
+        <rect x="158" y="48" width="178" height="104" rx="16" fill="rgba(56,189,248,0.12)" stroke="#38bdf8" stroke-width="2"/>
+        <text x="247" y="108" text-anchor="middle" fill="#e2e8f0" font-size="28" font-weight="700" font-family="DM Sans, sans-serif">Assign</text>
+        <line x1="346" y1="100" x2="418" y2="100" stroke="#38bdf8" stroke-width="3" marker-end="url(#arr)"/>
+        <rect x="428" y="48" width="178" height="104" rx="16" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="2"/>
+        <text x="517" y="108" text-anchor="middle" fill="#e2e8f0" font-size="28" font-weight="700" font-family="DM Sans, sans-serif">Track</text>
+        <line x1="616" y1="100" x2="688" y2="100" stroke="#38bdf8" stroke-width="3" marker-end="url(#arr)"/>
+        <rect x="698" y="48" width="178" height="104" rx="16" fill="rgba(52,211,153,0.12)" stroke="#34d399" stroke-width="2"/>
+        <text x="787" y="108" text-anchor="middle" fill="#e2e8f0" font-size="28" font-weight="700" font-family="DM Sans, sans-serif">Review</text>
+      </svg>
+      <p class="diagram-caption">Linear journey: assign → track → review</p>
+    </div>
+  </div>
+</div>
+
+<!-- 4 — PDF: End-User Experience -->
+<div class="slide">
+  <div class="slide-inner slide-inner--redis">
+    <h1>End-user experience</h1>
+    <div class="split">
+      <div>
+        <div class="chat-wrap">
+          <div class="chat">
+            <div class="msg user">Assign task to Ravi to Complete ppt</div>
+            <div class="msg bot">Got it. What time should we set as the deadline?</div>
+            <div class="msg user">Tomorrow 5 PM</div>
+            <div class="msg bot">Task created successfully</div>
+          </div>
+        </div>
+        <ul class="content-list" style="margin-top:1.25rem;max-width:52ch;">
+          <li>User sends message in plain language.</li>
+          <li>Bot understands intent and asks only necessary follow-up questions.</li>
+          <li>Bot confirms action and executes in backend.</li>
+          <li>User receives immediate WhatsApp response with outcome.</li>
+          <li>Works in multi-turn conversation (not just one-message commands).</li>
+        </ul>
+      </div>
+      <div class="diagram-panel">
+        <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="70" width="90" height="60" rx="12" fill="rgba(56,189,248,0.15)" stroke="#38bdf8"/>
+          <text x="65" y="105" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="600" font-family="DM Sans, sans-serif">User</text>
+          <path d="M115 100 H155" stroke="#64748b" stroke-width="2"/>
+          <polygon points="162,100 150,94 150,106" fill="#64748b"/>
+          <rect x="170" y="55" width="130" height="90" rx="14" fill="rgba(167,139,250,0.12)" stroke="#a78bfa"/>
+          <text x="235" y="88" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="600" font-family="DM Sans, sans-serif">Gemini layer</text>
+          <text x="235" y="108" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="DM Sans, sans-serif">NLU · slots · policy</text>
+          <text x="235" y="128" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="DM Sans, sans-serif">→ Appsavy APIs</text>
+          <path d="M235 148 L235 168" stroke="#34d399" stroke-width="2"/>
+          <rect x="175" y="172" width="120" height="22" rx="8" fill="rgba(52,211,153,0.15)" stroke="#34d399"/>
+          <text x="235" y="188" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="600" font-family="DM Sans, sans-serif">Persisted task</text>
+        </svg>
+        <p class="diagram-caption">Conversation stays natural; execution stays structured</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — PDF: 3-Agent Design (Overview) -->
+<div class="slide">
+  <div class="slide-inner slide-inner--redis">
+    <h1>Three-agent design</h1>
+    <p class="lead" style="max-width:55ch;">Intent → action → conversation guard: understand the ask, execute safely, keep the session coherent.</p>
+    <p class="lead" style="max-width:62ch;margin-top:-0.35rem;font-size:1.05rem;"><strong>Outcome:</strong> higher accuracy, fewer wrong actions, better user experience.</p>
+    <div class="diagram-panel diagram-panel--readable" style="max-width:560px;margin:0 auto;">
+      <svg viewBox="0 0 520 548" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arr2" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+            <path d="M0,0 L12,6 L0,12 Z" fill="#94a3b8"/>
+          </marker>
+        </defs>
+        <rect x="60" y="28" width="400" height="120" rx="18" fill="rgba(56,189,248,0.12)" stroke="#38bdf8" stroke-width="2.5"/>
+        <text x="260" y="78" text-anchor="middle" fill="#f1f5f9" font-size="30" font-weight="700" font-family="DM Sans, sans-serif">Intent brain</text>
+        <text x="260" y="112" text-anchor="middle" fill="#94a3b8" font-size="19" font-family="DM Sans, sans-serif">Classify · disambiguate</text>
+        <text x="260" y="138" text-anchor="middle" fill="#94a3b8" font-size="19" font-family="DM Sans, sans-serif">Validate supported intents</text>
+        <line x1="260" y1="156" x2="260" y2="198" stroke="#94a3b8" stroke-width="3" marker-end="url(#arr2)"/>
+        <rect x="60" y="208" width="400" height="120" rx="18" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="2.5"/>
+        <text x="260" y="258" text-anchor="middle" fill="#f1f5f9" font-size="30" font-weight="700" font-family="DM Sans, sans-serif">Action brain</text>
+        <text x="260" y="292" text-anchor="middle" fill="#94a3b8" font-size="19" font-family="DM Sans, sans-serif">Extract fields · state</text>
+        <text x="260" y="318" text-anchor="middle" fill="#94a3b8" font-size="19" font-family="DM Sans, sans-serif">Call backend · format reply</text>
+        <line x1="260" y1="336" x2="260" y2="378" stroke="#94a3b8" stroke-width="3" marker-end="url(#arr2)"/>
+        <rect x="60" y="388" width="400" height="120" rx="18" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="2.5"/>
+        <text x="260" y="428" text-anchor="middle" fill="#f1f5f9" font-size="30" font-weight="700" font-family="DM Sans, sans-serif">Guard brain</text>
+        <text x="260" y="456" text-anchor="middle" fill="#94a3b8" font-size="16" font-family="DM Sans, sans-serif">Conversation guard</text>
+        <text x="260" y="484" text-anchor="middle" fill="#94a3b8" font-size="19" font-family="DM Sans, sans-serif">Topic shifts · interruptions</text>
+        <text x="260" y="512" text-anchor="middle" fill="#94a3b8" font-size="19" font-family="DM Sans, sans-serif">Reduce wrong execution</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- 6 -->
+<div class="slide">
+  <div class="slide-inner">
+    <div class="agent-layout">
+      <div>
+        <div class="agent-badge">Agent 1</div>
+        <h1 style="margin-bottom:16px;">Intent brain</h1>
+        <ul class="content-list">
+          <li>Uses Gemini to classify messages into supported intents (assignment, update, performance, users, and related scopes).</li>
+          <li>Handles ambiguity with targeted clarification—for example, “pending tasks” for self vs team.</li>
+          <li>Stays within task-management scope before deeper processing.</li>
+          <li>Emits confidence and reasoning for downstream flow control.</li>
+        </ul>
+      </div>
+      <div class="diagram-panel">
+        <svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg">
+          <rect x="30" y="20" width="220" height="44" rx="10" fill="rgba(15,23,42,0.8)" stroke="#475569"/>
+          <text x="140" y="47" text-anchor="middle" fill="#cbd5e1" font-size="12" font-family="DM Sans, sans-serif">Raw message</text>
+          <path d="M140 66 L140 82" stroke="#38bdf8" stroke-width="2"/>
+          <rect x="40" y="88" width="200" height="72" rx="12" fill="rgba(56,189,248,0.15)" stroke="#38bdf8"/>
+          <text x="140" y="118" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="600" font-family="DM Sans, sans-serif">Intent classifier</text>
+          <text x="140" y="140" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="DM Sans, sans-serif">intent + confidence</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7 -->
+<div class="slide">
+  <div class="slide-inner">
+    <div class="agent-layout">
+      <div>
+        <div class="agent-badge">Agent 2</div>
+        <h1 style="margin-bottom:16px;">Action brain</h1>
+        <ul class="content-list">
+          <li>Uses policy-driven prompting to extract and normalise required fields per intent.</li>
+          <li>Keeps multi-turn state until all required values are captured; minimal clarification when something is missing.</li>
+          <li>Calls backend tools and Appsavy APIs only when data is complete.</li>
+          <li>Returns structured, professional responses to the user.</li>
+        </ul>
+      </div>
+      <div class="diagram-panel">
+        <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg">
+          <rect x="50" y="24" width="180" height="40" rx="10" fill="rgba(167,139,250,0.15)" stroke="#a78bfa"/>
+          <text x="140" y="50" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600" font-family="DM Sans, sans-serif">Slot filling</text>
+          <path d="M140 66 L140 80" stroke="#a78bfa" stroke-width="2"/>
+          <rect x="40" y="86" width="200" height="44" rx="10" fill="rgba(51,65,85,0.6)" stroke="#64748b"/>
+          <text x="140" y="114" text-anchor="middle" fill="#cbd5e1" font-size="12" font-family="DM Sans, sans-serif">Session / state store</text>
+          <path d="M140 132 L140 146" stroke="#38bdf8" stroke-width="2"/>
+          <rect x="35" y="152" width="210" height="36" rx="10" fill="rgba(56,189,248,0.12)" stroke="#38bdf8"/>
+          <text x="140" y="175" text-anchor="middle" fill="#7dd3fc" font-size="12" font-weight="600" font-family="DM Sans, sans-serif">API orchestration → response</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 -->
+<div class="slide">
+  <div class="slide-inner">
+    <div class="agent-layout">
+      <div>
+        <div class="agent-badge">Agent 3</div>
+        <h1 style="margin-bottom:16px;">Guard brain</h1>
+        <ul class="content-list">
+          <li>Detects topic shifts and new requests mid-conversation.</li>
+          <li>Prevents mixing old and new requests or unrelated actions in one turn.</li>
+          <li>Handles confirmation-stage interruptions without losing context; on shift, asks to continue prior context or start fresh.</li>
+          <li>Reduces execution errors in real-world chat behaviour.</li>
+        </ul>
+      </div>
+      <div class="diagram-panel">
+        <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg">
+          <rect x="30" y="30" width="100" height="50" rx="10" fill="rgba(248,113,113,0.12)" stroke="#f87171"/>
+          <text x="80" y="60" text-anchor="middle" fill="#fecaca" font-size="11" font-weight="600" font-family="DM Sans, sans-serif">Interrupt</text>
+          <rect x="150" y="30" width="100" height="50" rx="10" fill="rgba(52,211,153,0.12)" stroke="#34d399"/>
+          <text x="200" y="60" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="600" font-family="DM Sans, sans-serif">Resume</text>
+          <path d="M140 92 L140 110" stroke="#64748b" stroke-width="2"/>
+          <rect x="40" y="118" width="200" height="56" rx="12" fill="rgba(15,23,42,0.9)" stroke="#475569"/>
+          <text x="140" y="145" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="600" font-family="DM Sans, sans-serif">Session policy</text>
+          <text x="140" y="164" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="DM Sans, sans-serif">one clear action per turn</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9 — PDF: Appsavy Connection -->
+<div class="slide">
+  <div class="slide-inner slide-inner--redis">
+    <h1>Appsavy connection</h1>
+    <ul class="content-list" style="max-width:62ch;">
+      <li>Appsavy is the business backend: task, user, and report APIs.</li>
+      <li>The AI layer stays thin—validated payloads only—and sends them to Appsavy endpoints.</li>
+      <li>Operations include create/update tasks, status changes, counts and reports, and user operations.</li>
+      <li>Enterprise workflow stays centralized in Appsavy; WhatsApp is the UI, Appsavy is the system of action.</li>
+    </ul>
+    <div class="diagram-panel diagram-panel--readable" style="max-width:520px;margin:0 auto;">
+      <svg viewBox="0 0 480 460" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arr9" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+            <path d="M0,0 L12,6 L0,12 Z" fill="#94a3b8"/>
+          </marker>
+        </defs>
+        <rect x="40" y="24" width="400" height="100" rx="18" fill="rgba(56,189,248,0.12)" stroke="#38bdf8" stroke-width="2.5"/>
+        <text x="240" y="68" text-anchor="middle" fill="#f1f5f9" font-size="28" font-weight="700" font-family="DM Sans, sans-serif">AI layer</text>
+        <text x="240" y="102" text-anchor="middle" fill="#94a3b8" font-size="18" font-family="DM Sans, sans-serif">Agents + prompts</text>
+        <line x1="240" y1="132" x2="240" y2="168" stroke="#94a3b8" stroke-width="3" marker-end="url(#arr9)"/>
+        <rect x="40" y="178" width="400" height="130" rx="18" fill="rgba(167,139,250,0.14)" stroke="#a78bfa" stroke-width="2.5"/>
+        <text x="240" y="228" text-anchor="middle" fill="#f1f5f9" font-size="28" font-weight="700" font-family="DM Sans, sans-serif">Appsavy APIs</text>
+        <text x="240" y="262" text-anchor="middle" fill="#94a3b8" font-size="18" font-family="DM Sans, sans-serif">Tasks · users · workflows</text>
+        <text x="240" y="290" text-anchor="middle" fill="#94a3b8" font-size="18" font-family="DM Sans, sans-serif">Authorisation · audit</text>
+        <line x1="240" y1="314" x2="240" y2="350" stroke="#94a3b8" stroke-width="3" marker-end="url(#arr9)"/>
+        <rect x="40" y="360" width="400" height="88" rx="18" fill="rgba(52,211,153,0.12)" stroke="#34d399" stroke-width="2.5"/>
+        <text x="240" y="402" text-anchor="middle" fill="#6ee7b7" font-size="26" font-weight="700" font-family="DM Sans, sans-serif">Execution</text>
+        <text x="240" y="434" text-anchor="middle" fill="#94a3b8" font-size="17" font-family="DM Sans, sans-serif">Side effects · persisted state</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- 10 -->
+<div class="slide">
+  <div class="slide-inner">
+    <div class="split">
+      <div>
+        <h1>Gemini connection</h1>
+        <p class="lead" style="max-width:none;">Language understanding and reasoning across the stack—intent, parameters, clarification, and intent-shift (Agent 3)—plus routing hints and context boundaries.</p>
+        <ul class="content-list">
+          <li>Wrapped with timeout and fallback for reliability.</li>
+          <li>Turns natural language into machine-actionable data for downstream agents and APIs.</li>
+        </ul>
+      </div>
+      <div class="diagram-panel">
+        <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="160" cy="120" r="72" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="2"/>
+          <text x="160" y="108" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700" font-family="DM Sans, sans-serif">Gemini</text>
+          <text x="160" y="128" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="DM Sans, sans-serif">multimodal LLM</text>
+          <text x="160" y="148" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="DM Sans, sans-serif">(classification &amp; generation)</text>
+          <g font-size="10" fill="#cbd5e1" font-family="DM Sans, sans-serif">
+            <rect x="20" y="40" width="88" height="28" rx="8" fill="rgba(56,189,248,0.15)" stroke="#38bdf8"/>
+            <text x="64" y="58" text-anchor="middle">Intents</text>
+            <rect x="212" y="40" width="88" height="28" rx="8" fill="rgba(56,189,248,0.15)" stroke="#38bdf8"/>
+            <text x="256" y="58" text-anchor="middle">Entities</text>
+            <rect x="20" y="188" width="88" height="28" rx="8" fill="rgba(52,211,153,0.12)" stroke="#34d399"/>
+            <text x="64" y="206" text-anchor="middle">Shifts</text>
+            <rect x="212" y="188" width="88" height="28" rx="8" fill="rgba(52,211,153,0.12)" stroke="#34d399"/>
+            <text x="256" y="206" text-anchor="middle">Clarify</text>
+          </g>
+          <line x1="64" y1="70" x2="110" y2="95" stroke="#475569" stroke-width="1"/>
+          <line x1="256" y1="70" x2="210" y2="95" stroke="#475569" stroke-width="1"/>
+          <line x1="64" y1="186" x2="110" y2="155" stroke="#475569" stroke-width="1"/>
+          <line x1="256" y1="186" x2="210" y2="155" stroke="#475569" stroke-width="1"/>
+        </svg>
+        <p class="diagram-caption">Outputs feed agents; storage stays in Appsavy / DBs</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 11 — aligned with PPT Task Manager.pdf “Redis + MongoDB Connection” -->
+<div class="slide">
+  <div class="slide-inner slide-inner--redis">
+    <h1>Redis + MongoDB connection</h1>
+    <p class="lead" style="max-width:none;"><strong style="color:#fecaca;font-weight:600;">Redis</strong> for fast conversation state; <strong style="color:#7dd3fc;font-weight:600;">MongoDB</strong> for persistent user and org truth.</p>
+    <div class="db-split-cards">
+      <div class="db-card db-card--redis">
+        <h2>Redis — real-time memory / state</h2>
+        <ul>
+          <li>Session history for multi-turn conversations</li>
+          <li>Deduplication of repeated webhook events</li>
+          <li>Temporary pending states, locks, and conversation continuity</li>
+        </ul>
+      </div>
+      <div class="db-card db-card--mongo">
+        <h2>MongoDB — identity + org layer</h2>
+        <ul>
+          <li>Registered users and phone / user mapping</li>
+          <li>Role resolution (manager / employee)</li>
+          <li>Team hierarchy lookup for authorization and routing</li>
+        </ul>
+      </div>
+    </div>
+    <p class="db-together">Identity checks from MongoDB run throughout the flow alongside Redis-backed session state.</p>
+  </div>
+</div>
+
+<!-- 12 — PPT Task Manager.pdf “End-to-End System Flow” -->
+<div class="slide">
+  <div class="slide-inner slide-inner--redis">
+    <h1>End-to-end system flow</h1>
+    <p class="lead" style="max-width:62ch;">From inbound message to WhatsApp reply, with Redis, Gemini agents, Appsavy, and MongoDB in the loop.</p>
+    <ol class="flow-steps-list">
+      <li>WhatsApp message → webhook → <strong style="color:#fecaca;font-weight:600;">dedup (Redis)</strong></li>
+      <li><strong>Agent 1</strong> classifies intent (Gemini)</li>
+      <li><strong>Agent 3</strong> checks context shift (Gemini + Redis history)</li>
+      <li><strong>Agent 2</strong> extracts fields and validates readiness (Gemini + policy)</li>
+      <li><strong>Appsavy</strong> API executes the business action</li>
+      <li>Response is sent back to WhatsApp</li>
+      <li>User / team <strong style="color:#7dd3fc;font-weight:600;">identity checks from MongoDB</strong> throughout</li>
+    </ol>
+  </div>
+</div>
+
+<!-- 13 -->
+<div class="slide">
+  <div class="slide-inner">
+    <div class="split">
+      <div>
+        <h1>Reliability &amp; governance</h1>
+        <ul class="content-list">
+          <li>Webhook returns quickly; heavy work runs asynchronously.</li>
+          <li>Duplicate protection and idempotent task creation.</li>
+          <li>Session TTL and stale-session handling for robust multi-turn flows.</li>
+          <li>Access control via registered phone/user mapping and Appsavy-aligned roles.</li>
+          <li>Professional responses, scoped intents, and consistent tone.</li>
+        </ul>
+      </div>
+      <div class="diagram-panel">
+        <svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg">
+          <rect x="40" y="30" width="220" height="46" rx="12" fill="rgba(56,189,248,0.12)" stroke="#38bdf8"/>
+          <text x="150" y="58" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600" font-family="DM Sans, sans-serif">Idempotency &amp; dedup</text>
+          <rect x="40" y="92" width="220" height="46" rx="12" fill="rgba(167,139,250,0.12)" stroke="#a78bfa"/>
+          <text x="150" y="120" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600" font-family="DM Sans, sans-serif">Sessions &amp; ACL</text>
+          <rect x="40" y="154" width="220" height="46" rx="12" fill="rgba(52,211,153,0.1)" stroke="#34d399"/>
+          <text x="150" y="182" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600" font-family="DM Sans, sans-serif">Tone &amp; safety policy</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 14 -->
+<div class="slide">
+  <div class="slide-inner">
+    <div class="split">
+      <div>
+        <h1>Customer value</h1>
+        <ul class="content-list">
+          <li>Faster turnaround from chat to execution.</li>
+          <li>Clearer accountability through structured assignments, updates, and ownership.</li>
+          <li>Manager visibility into pending work and performance without a separate dashboard-first rollout.</li>
+          <li>Less friction for frontline users and managers—no app switching for core actions.</li>
+          <li>Architecture that can scale with enterprise workflow growth.</li>
+        </ul>
+      </div>
+      <div>
+        <p class="lead" style="max-width:none;font-size:1rem;margin-bottom:12px;">Outcomes at a glance</p>
+        <div class="chip-grid">
+          <span class="chip">Speed</span>
+          <span class="chip">Clarity</span>
+          <span class="chip">Visibility</span>
+          <span class="chip">Adoption</span>
+          <span class="chip">Governance</span>
+        </div>
+        <div class="diagram-panel" style="margin-top:20px;">
+          <svg viewBox="0 0 280 140" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40 100 Q90 40 140 70 T240 55" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="40" cy="100" r="6" fill="#38bdf8"/>
+            <circle cx="140" cy="70" r="6" fill="#a78bfa"/>
+            <circle cx="240" cy="55" r="6" fill="#34d399"/>
+            <text x="140" y="125" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="DM Sans, sans-serif">Momentum: chat → structure → insight</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 15 -->
+<div class="slide">
+  <div class="slide-inner">
+    <h1>Developed with Mobineers Info Systems</h1>
+    <div class="split">
+      <ul class="content-list">
+        <li>IT solutions company with long experience in custom software, mobile apps, and digital transformation (New Delhi).</li>
+        <li>Focus: workflow automation, enterprise applications, and sector-specific solutions (including power / utilities).</li>
+        <li>Platforms include <strong>AppSavy®</strong> for low-code / rapid delivery—aligned with the Appsavy-backed flows in this product.</li>
+      </ul>
+      <div class="diagram-panel">
+        <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+          <rect x="50" y="40" width="200" height="56" rx="12" fill="rgba(56,189,248,0.12)" stroke="#38bdf8"/>
+          <text x="150" y="75" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700" font-family="DM Sans, sans-serif">Mobineers</text>
+          <path d="M150 98 L150 118" stroke="#64748b" stroke-width="2"/>
+          <rect x="40" y="124" width="220" height="40" rx="10" fill="rgba(167,139,250,0.12)" stroke="#a78bfa"/>
+          <text x="150" y="150" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="600" font-family="DM Sans, sans-serif">AppSavy® platform</text>
+        </svg>
+        <p class="diagram-caption">Delivery partner ↔ product stack</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 16 -->
+<div class="slide">
+  <div class="slide-inner">
+    <h1>Customer: DHBVN</h1>
+    <p class="lead" style="max-width:62ch;">Dakshin Haryana Bijli Vitran Nigam—power distribution utility where leadership and execution need fast task loops in chat.</p>
+    <ul class="content-list" style="max-width:62ch;">
+      <li>Serves consumers and manages operations, projects, and customer service across its licence area.</li>
+      <li>This assistant targets roles that assign and chase work without leaving WhatsApp.</li>
+      <li>Audience: MD, IAS, engineers, managers—high context, low patience for tool-switching.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="nav">
+  <button type="button" onclick="prev()">Previous</button>
+  <button type="button" onclick="next()">Next</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let index = 0;
+
+function showSlide(i) {
+  slides.forEach(s => s.classList.remove('active'));
+  slides[i].classList.add('active');
+}
+
+function next() {
+  if (index < slides.length - 1) index++;
+  showSlide(index);
+}
+
+function prev() {
+  if (index > 0) index--;
+  showSlide(index);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+});
+</script>
+
+</body>
+</html>
